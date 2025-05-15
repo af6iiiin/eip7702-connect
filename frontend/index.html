@@ -17,32 +17,41 @@
   <pre id="result"></pre>
 
   <script>
-    const { createWeb3Modal, defaultConfig } = window.web3modal;
+    let modal;
 
-    const projectId = "f90d92aa0fc85c96777dd9041203122b"; // ← اینجا Project ID واقعی WalletConnect را جایگزین کن
+    window.addEventListener("load", () => {
+      const { createWeb3Modal, defaultConfig } = window.web3modal;
 
-    const metadata = {
-      name: "Afshin Dapp",
-      description: "Sign with your wallet",
-      url: "https://eip-7702-public.onrender.com",
-      icons: ["https://eip-7702-public.onrender.com/icon.png"]
-    };
+      const projectId = "f90d92aa0fc85c96777dd9041203122b"; // ← جایگزین کن
 
-    const config = defaultConfig({
-      projectId,
-      metadata,
-      chains: [
-        {
-          chainId: 11155111,
-          name: "Sepolia",
-          rpcUrl: "https://ethereum-sepolia.publicnode.com"
-        }
-      ]
+      const metadata = {
+        name: "Afshin Dapp",
+        description: "Sign with your wallet",
+        url: "https://eip-7702-public.onrender.com",
+        icons: ["https://eip-7702-public.onrender.com/icon.png"]
+      };
+
+      const config = defaultConfig({
+        projectId,
+        metadata,
+        chains: [
+          {
+            chainId: 11155111,
+            name: "Sepolia",
+            rpcUrl: "https://ethereum-sepolia.publicnode.com"
+          }
+        ]
+      });
+
+      modal = createWeb3Modal({ config });
     });
 
-    const modal = createWeb3Modal({ config });
-
     async function connectAndSign() {
+      if (!modal) {
+        alert("❗ لطفاً چند لحظه صبر کنید تا کیف پول بارگذاری شود.");
+        return;
+      }
+
       try {
         const provider = await modal.open();
         const ethersProvider = new ethers.BrowserProvider(provider);
