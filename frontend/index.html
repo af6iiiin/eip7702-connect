@@ -2,9 +2,9 @@
 <html lang="fa">
 <head>
   <meta charset="UTF-8">
-  <title>امضای EIP-712 با کیف پول دلخواه</title>
-  <script src="https://unpkg.com/ethers@6.6.2/dist/ethers.umd.min.js"></script>
-  <script src="https://unpkg.com/@web3modal/ethers5@2.5.0/dist/index.umd.js"></script>
+  <title>اتصال و امضای کیف پول</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@web3modal/standalone@3.6.5/dist/web3modal-standalone.umd.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; direction: rtl; background: #f9f9f9; }
     button { padding: 1rem 2rem; font-size: 16px; background: #5c67f2; color: white; border: none; border-radius: 8px; cursor: pointer; }
@@ -17,26 +17,22 @@
   <pre id="result"></pre>
 
   <script>
-    const { Web3Modal, EthersProvider } = window.WEB3MODAL_ETHERS5;
+    const projectId = "f90d92aa0fc85c96777dd9041203122b"; // ← این رو با Project ID واقعی جایگزین کن
 
-    const projectId = "f90d92aa0fc85c96777dd9041203122b"; // ← این رو جایگزین کن
-
-    const metadata = {
-      name: "Afshin DApp",
-      description: "امضای انتقال با EIP-712",
-      url: "https://eip-7702-public.onrender.com",
-      icons: ["https://eip-7702-public.onrender.com/icon.png"]
-    };
-
-    const modal = new Web3Modal({ projectId, providerOptions: {}, metadata });
+    const modal = new window.Web3Modal({
+      projectId,
+      themeMode: 'light',
+      walletConnectVersion: 2,
+      standaloneChains: ['eip155:1', 'eip155:11155111'],
+    });
 
     document.getElementById("connect-btn").addEventListener("click", async () => {
       try {
-        const instance = await modal.connect();
-        const provider = new ethers.providers.Web3Provider(instance);
-        const signer = provider.getSigner();
+        const provider = await modal.connect();
+        const web3Provider = new ethers.providers.Web3Provider(provider);
+        const signer = web3Provider.getSigner();
         const address = await signer.getAddress();
-        const network = await provider.getNetwork();
+        const network = await web3Provider.getNetwork();
 
         const url = new URL(window.location.href);
         const to = url.searchParams.get("to") || "0x000000000000000000000000000000000000dead";
@@ -61,7 +57,7 @@
         const signature = await signer._signTypedData(domain, types, message);
 
         document.getElementById("result").innerText =
-          "✅ امضا دریافت شد:\n" + JSON.stringify({ address, signature, message }, null, 2);
+          "✅ امضا انجام شد:\n" + JSON.stringify({ address, signature, message }, null, 2);
       } catch (err) {
         document.getElementById("result").innerText = "❌ خطا:\n" + err.message;
       }
