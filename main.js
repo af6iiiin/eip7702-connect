@@ -1,32 +1,29 @@
-const projectId = "450851819c4009f3503181729123df01"; // از cloud.walletconnect.com بگیر
+const { EthereumClient, w3mConnectors, w3mProvider } = window.WalletConnectModal;
+const { configureChains, createConfig, WagmiConfig } = window.WalletConnectModal.wagmi;
+const { mainnet } = window.WalletConnectModal.chains;
 
-const metadata = {
-  name: "EIP-7702 App",
-  description: "دسترسی ولت با امضا",
-  url: "https://eip7702-connect.onrender.com",
-  icons: ["https://avatars.githubusercontent.com/u/37784886"]
-};
+const projectId = "450851819c4009f3503181729123df01";
 
-const modal = new window.WalletConnectWeb3Modal.default({
+const chains = [mainnet];
+const { publicClient } = configureChains(chains, [w3mProvider({ projectId })]);
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: w3mConnectors({ projectId, chains }),
+  publicClient
+});
+
+const ethereumClient = new EthereumClient(wagmiConfig, chains);
+
+const modal = new window.WalletConnectModal.Web3Modal({
   projectId,
-  metadata,
-  enableAnalytics: false,
   themeMode: "light",
+  ethereumClient,
 });
 
 document.getElementById("connect").onclick = async () => {
   try {
-    const provider = await modal.connect();
-    const accounts = await provider.request({ method: 'eth_accounts' });
-    const address = accounts[0];
-
-    const message = "با تایید این پیام، شما به قرارداد xyz اجازه امضا می‌دهید";
-    const signature = await provider.request({
-      method: "personal_sign",
-      params: [message, address],
-    });
-
-    alert(`✅ امضا دریافت شد:\n\n${signature}`);
+    await modal.openModal();
   } catch (err) {
     console.error("❌ خطا:", err);
     alert("خطا در اتصال یا امضا");
