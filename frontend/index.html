@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>امضای EIP-7702</title>
+  <meta charset="utf-8" />
+  <title>EIP-712 Sign Link</title>
 </head>
 <body>
-  <h2>امضای دسترسی برای انتقال دارایی</h2>
+  <h2>امضای دسترسی</h2>
   <button onclick="signMessage()">اتصال و امضا</button>
-  <p id="result"></p>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.min.js"></script>
+  <pre id="result"></pre>
+
+  <!-- Ethers باید اول لود بشه -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

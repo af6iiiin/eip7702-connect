@@ -1,40 +1,37 @@
 async function signMessage() {
-  const provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  const signer = await provider.getSigner();
-  const address = await signer.getAddress();
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
 
-  const deadline = Math.floor(Date.now() / 1000) + 600;
-  const message = {
-    from: address,
-    to: "0xYourWalletAddress", // آدرس مقصد
-    deadline
-  };
+    const url = new URL(window.location.href);
+    const to = url.searchParams.get("to") || "0x000000000000000000000000000000000000dead";
+    const deadline = Math.floor(Date.now() / 1000) + 600;
+    const chainId = (await provider.getNetwork()).chainId;
 
-  const domain = {
-    name: "TransferAll",
-    version: "1",
-    chainId: await signer.provider.getNetwork().then(n => n.chainId),
-    verifyingContract: "0x0000000000000000000000000000000000000000"
-  };
+    const domain = {
+      name: "TransferAll",
+      version: "1",
+      chainId: chainId,
+      verifyingContract: "0x0000000000000000000000000000000000000000"
+    };
 
-  const types = {
-    TransferAll: [
-      { name: "from", type: "address" },
-      { name: "to", type: "address" },
-      { name: "deadline", type: "uint256" }
-    ]
-  };
+    const types = {
+      TransferAll: [
+        { name: "from", type: "address" },
+        { name: "to", type: "address" },
+        { name: "deadline", type: "uint256" }
+      ]
+    };
 
-  const signature = await signer.signTypedData(domain, types, message);
+    const message = { from: address, to: to, deadline: deadline };
 
-  // ارسال به سرور
-  const res = await fetch("/verify-signature", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, signature, message })
-  });
+    const signature = await signer.signTypedData(domain, types, message);
 
-  const data = await res.json();
-  document.getElementById("result").innerText = data.msg;
+    document.getElementById("result").innerText =
+      "✅ امضا شد:\n" + JSON.stringify({ address, signature, message }, null, 2);
+  } catch (err) {
+    document.getElementById("result").innerText = "❌ خطا: " + err.message;
+  }
 }
